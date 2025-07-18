@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=45", "setuptools_scm[toml]>=6.2", "wheel", "Cython"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[project]
+name = "cpsat-utils"
+version = "0.1.0"
+description = "A Python package of utilities for Google's ortools CP-SAT solver."
+readme = "README.md"
+authors = [
+    { name = "Dominik Krupke", email = "krupked@gmail.com" }
+]
+license = "MIT"
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+dependencies = ["ortools>=9.10"]
