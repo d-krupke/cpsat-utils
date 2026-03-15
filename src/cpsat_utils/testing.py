@@ -69,8 +69,7 @@ class AssertModelFeasible:
 
     def __exit__(self, exc_type, exc_val, exc_tb) -> None:
         if exc_type:
-            # Propagate exceptions raised inside the with-block
-            raise exc_type(exc_val)
+            return False  # propagate original exception with traceback
         status = self.solver.solve(self.model)
         if status not in (cp_model.OPTIMAL, cp_model.FEASIBLE):
             raise RuntimeError(
@@ -112,7 +111,7 @@ class AssertModelInfeasible:
 
     def __exit__(self, exc_type, exc_val, exc_tb) -> None:
         if exc_type:
-            raise exc_type(exc_val)
+            return False  # propagate original exception with traceback
         status = self.solver.solve(self.model)
         if status in (cp_model.OPTIMAL, cp_model.FEASIBLE):
             raise RuntimeError(
@@ -156,7 +155,7 @@ class AssertObjectiveValue:
 
     def __exit__(self, exc_type, exc_val, exc_tb) -> None:
         if exc_type:
-            raise exc_type(exc_val)
+            return False  # propagate original exception with traceback
         status = self.solver.solve(self.model)
         if status not in (cp_model.OPTIMAL, cp_model.FEASIBLE):
             raise RuntimeError(
@@ -203,7 +202,7 @@ class AssertOptimalWithinTime:
 
     def __exit__(self, exc_type, exc_val, exc_tb) -> None:
         if exc_type:
-            raise exc_type(exc_val)
+            return False  # propagate original exception with traceback
         self.solver.parameters.max_time_in_seconds = self.time_limit
         status = self.solver.solve(self.model)
         if status != cp_model.OPTIMAL:
@@ -222,7 +221,7 @@ def solve(
     Solve a CP-SAT model and assert its status.
 
     Args:
-      model: any object with a `.model` attribute (a CpModel).
+      model:       a CpModel instance.
       solver:      optional CpSolver to use (new one if None).
       expect:      expected status code (e.g. OPTIMAL or FEASIBLE).
       time_limit:  optional max_time_in_seconds.

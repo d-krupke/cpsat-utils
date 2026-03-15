@@ -5,7 +5,7 @@ Provides context managers and assertion helpers for testing CP-SAT models,
 hint management utilities, and model import/export.
 """
 
-__version__ = "0.3.0"
+__version__ = "0.4.0"
 
 from cpsat_utils.hints import assert_hint_feasible, complete_hint
 from cpsat_utils.io import export_model, import_model

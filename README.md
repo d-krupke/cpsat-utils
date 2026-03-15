@@ -2,8 +2,9 @@
 
 Utilities for Google's
 [OR-Tools CP-SAT](https://developers.google.com/optimization/cp/cp_solver)
-solver. Provides testing helpers, hint management, and model import/export for
-test-driven development of constraint programming models.
+solver. Provides testing helpers, hint management, piecewise linear/constant
+function constraints, and model import/export for test-driven development of
+constraint programming models.
 
 For a full walkthrough of test-driven optimization with CP-SAT, see the
 [TDD chapter](https://github.com/d-krupke/cpsat-primer) of the CP-SAT Primer.
@@ -123,6 +124,84 @@ complete_hint(model)   # fills in y, z, ... via a short solve
 
 Returns `True` on success, `False` if the hints are infeasible or the solve
 times out (hints are left unchanged on failure).
+
+## Piecewise Linear Functions
+
+Model non-linear relationships (costs, revenue, value curves) as integer
+constraints in CP-SAT. This is useful when piecewise functions appear as part
+of a larger model that benefits from CP-SAT's strengths in combinatorial
+optimization. For pure non-linear optimization, dedicated solvers are
+typically a better choice.
+
+Since CP-SAT operates on integers only, true piecewise linear values generally
+fall between integers and cannot be enforced as exact equalities.
+
+```python
+from ortools.sat.python import cp_model
+from cpsat_utils.piecewise import PiecewiseLinearFunction
+
+model = cp_model.CpModel()
+x = model.new_int_var(0, 100, "x")
+
+# Define from breakpoints:
+f = PiecewiseLinearFunction([0, 30, 70, 100], [0, 80, 60, 100])
+
+# One-sided bounds — the optimizer pushes y to the bound:
+y = f.add_upper_bound(model, x)  # y <= f(x), use when maximizing y
+y = f.add_lower_bound(model, x)  # y >= f(x), use when minimizing y
+
+# Equality constraints — exact integer rounding:
+y = f.add_floor(model, x)   # y = floor(f(x))
+y = f.add_ceil(model, x)    # y = ceil(f(x))
+y = f.add_round(model, x)   # y = round(f(x))
+```
+
+Approximate any callable as a piecewise linear function:
+
+```python
+import math
+f = PiecewiseLinearFunction.from_function(math.sqrt, x_min=0, x_max=100, num_breakpoints=20)
+y = f.add_round(model, x)   # y ≈ sqrt(x)
+```
+
+### Encoding optimizations
+
+The implementation automatically applies two optimizations that dramatically
+improve solver performance:
+
+- **Convex partitioning** (one-sided bounds only): groups consecutive segments
+  with compatible gradients into convex parts, reducing the number of boolean
+  selector variables. A function with 50 segments but only 3 convex parts
+  needs 3 booleans instead of 50.
+- **Convex envelope**: adds a redundant global constraint that tightens the
+  LP relaxation without reification. This is the dominant optimization —
+  it enables the solver to prove optimality with zero branching on many
+  instances.
+
+Both are enabled by default. On benchmarks with 5000 piecewise linear
+functions (10 breakpoints each), `bound+opt+env` solves a knapsack in 15s
+and a generator dispatch in 19s. Without the envelope, instances with 50
+functions already time out at 30s. See
+[`benchmarks/piecewise/README.md`](benchmarks/piecewise/README.md) for full
+results.
+
+### Step functions
+
+For piecewise constant functions (e.g., pricing tiers, tax brackets):
+
+```python
+from cpsat_utils.piecewise import StepFunction
+
+# Value is 10 for x in [0,3), 20 for x in [3,7), 30 for x in [7,10)
+f = StepFunction([0, 3, 7, 10], [10, 20, 30])
+y = f.add_constraint(model, x)
+```
+
+### Examples
+
+See [`examples/`](examples/README.md) for complete, runnable examples with
+plots — from a simple budget allocation (PiecewiseLinearFunction) to
+multi-period generator dispatch (both function types combined).
 
 ## Model Import/Export
 

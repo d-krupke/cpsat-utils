@@ -1,0 +1,137 @@
+
+==========================================================================================
+Stress test: Knapsack (convex) — scaling items
+==========================================================================================
+config                                        |       strategy |     status   time_s   bools   branches
+------------------------------------------------------------------------------------------
+n_items=500, max_quantity=100, n_breakpo...   |  bound+opt+env |    OPTIMAL    0.283    1488          0
+n_items=500, max_quantity=100, n_breakpo...   |         eq+env |    OPTIMAL    0.737    5479          0
+
+n_items=1000, max_quantity=100, n_breakp...   |  bound+opt+env |    OPTIMAL    1.031    2911       4788
+n_items=1000, max_quantity=100, n_breakp...   |         eq+env |    OPTIMAL    2.385   16382          0
+
+n_items=2000, max_quantity=100, n_breakp...   |  bound+opt+env |    OPTIMAL    2.187    5693       1862
+n_items=2000, max_quantity=100, n_breakp...   |         eq+env |    OPTIMAL    4.439   29553          0
+
+n_items=5000, max_quantity=100, n_breakp...   |  bound+opt+env |    OPTIMAL   15.142   14238       1336
+n_items=5000, max_quantity=100, n_breakp...   |         eq+env |    OPTIMAL   21.070   98043          0
+
+
+==========================================================================================
+Stress test: Knapsack (convex) — scaling breakpoints
+==========================================================================================
+config                                        |       strategy |     status   time_s   bools   branches
+------------------------------------------------------------------------------------------
+n_items=200, max_quantity=100, n_breakpo...   |  bound+opt+env |    OPTIMAL    0.506    7238          0
+n_items=200, max_quantity=100, n_breakpo...   |         eq+env |    OPTIMAL    1.482   19276          0
+
+n_items=200, max_quantity=1000, n_breakp...   |  bound+opt+env |    OPTIMAL    0.895    8526          0
+n_items=200, max_quantity=1000, n_breakp...   |         eq+env |    OPTIMAL    2.109   18807          0
+
+n_items=200, max_quantity=100, n_breakpo...   |  bound+opt+env |    OPTIMAL    0.712    6127          0
+n_items=200, max_quantity=100, n_breakpo...   |         eq+env |    OPTIMAL    2.150   24559        708
+
+
+==========================================================================================
+Stress test: Knapsack (non-convex) — scaling
+==========================================================================================
+config                                        |       strategy |     status   time_s   bools   branches
+------------------------------------------------------------------------------------------
+n_items=500, max_quantity=100, n_breakpo...   |  bound+opt+env |    OPTIMAL    0.377    4225          0
+n_items=500, max_quantity=100, n_breakpo...   |         eq+env |    OPTIMAL    1.792    8069          0
+
+n_items=1000, max_quantity=100, n_breakp...   |  bound+opt+env |    OPTIMAL    3.328    7587          0
+n_items=1000, max_quantity=100, n_breakp...   |         eq+env |    OPTIMAL    2.998   19037          0
+
+n_items=200, max_quantity=100, n_breakpo...   |  bound+opt+env |    OPTIMAL    1.599    8193          0
+n_items=200, max_quantity=100, n_breakpo...   |         eq+env |    OPTIMAL    3.006   26354          0
+
+n_items=200, max_quantity=100, n_breakpo...   |  bound+opt+env |    OPTIMAL    1.217   15779          0
+n_items=200, max_quantity=100, n_breakpo...   |         eq+env |    OPTIMAL    3.667   41534          0
+
+
+==========================================================================================
+Stress test: Production (convex) — scaling products
+==========================================================================================
+config                                        |       strategy |     status   time_s   bools   branches
+------------------------------------------------------------------------------------------
+n_products=100, n_resources=5, max_produ...   |  bound+opt+env |    OPTIMAL    0.749     286          0
+n_products=100, n_resources=5, max_produ...   |         eq+env |    OPTIMAL    1.329    1637          0
+
+n_products=150, n_resources=5, max_produ...   |  bound+opt+env |    OPTIMAL    6.677     402          0
+n_products=150, n_resources=5, max_produ...   |         eq+env |    OPTIMAL    8.153    2738          0
+
+n_products=200, n_resources=5, max_produ...   |  bound+opt+env |    OPTIMAL   15.083     570          0
+n_products=200, n_resources=5, max_produ...   |         eq+env |    OPTIMAL   21.552    3290          0
+
+n_products=300, n_resources=5, max_produ...   |  bound+opt+env |    OPTIMAL   15.430     819          0
+n_products=300, n_resources=5, max_produ...   |         eq+env |    OPTIMAL   17.935    5466          0
+
+
+==========================================================================================
+Stress test: Production (convex) — scaling resources
+==========================================================================================
+config                                        |       strategy |     status   time_s   bools   branches
+------------------------------------------------------------------------------------------
+n_products=50, n_resources=5, max_produc...   |  bound+opt+env |    OPTIMAL    0.300     133          0
+n_products=50, n_resources=5, max_produc...   |         eq+env |    OPTIMAL    0.437    1095          0
+
+n_products=50, n_resources=10, max_produ...   |  bound+opt+env |    OPTIMAL    1.802     128         10
+n_products=50, n_resources=10, max_produ...   |         eq+env |    OPTIMAL    2.005    1089          0
+
+n_products=50, n_resources=20, max_produ...   |  bound+opt+env |   FEASIBLE   30.125     157          0 ***
+n_products=50, n_resources=20, max_produ...   |         eq+env |   FEASIBLE   30.107    1090          0 ***
+
+n_products=50, n_resources=50, max_produ...   |  bound+opt+env |   FEASIBLE   30.077     142         26 ***
+n_products=50, n_resources=50, max_produ...   |         eq+env |   FEASIBLE   30.059    1229          0 ***
+
+
+==========================================================================================
+Stress test: Production (non-convex) — scaling
+==========================================================================================
+config                                        |       strategy |     status   time_s   bools   branches
+------------------------------------------------------------------------------------------
+n_products=100, n_resources=5, max_produ...   |  bound+opt+env |    OPTIMAL    5.158    1198          0
+n_products=100, n_resources=5, max_produ...   |         eq+env |    OPTIMAL   14.285    1903          0
+
+n_products=150, n_resources=5, max_produ...   |  bound+opt+env |    OPTIMAL   23.040    1571          0
+n_products=150, n_resources=5, max_produ...   |         eq+env |   FEASIBLE   30.208    2494          0 ***
+
+n_products=200, n_resources=5, max_produ...   |  bound+opt+env |   FEASIBLE   31.290    1953          0 ***
+n_products=200, n_resources=5, max_produ...   |         eq+env |   FEASIBLE   30.061    3803          0 ***
+
+n_products=50, n_resources=10, max_produ...   |  bound+opt+env |    OPTIMAL    1.621     646          0
+n_products=50, n_resources=10, max_produ...   |         eq+env |    OPTIMAL    3.961    1241          0
+
+
+==========================================================================================
+Stress test: Dispatch — scaling generators
+==========================================================================================
+config                                        |       strategy |     status   time_s   bools   branches
+------------------------------------------------------------------------------------------
+n_generators=500, max_output=500, n_brea...   |  bound+opt+env |    OPTIMAL    0.283    1021       2266
+n_generators=500, max_output=500, n_brea...   |         eq+env |    OPTIMAL    0.713   12397       7390
+
+n_generators=1000, max_output=500, n_bre...   |  bound+opt+env |    OPTIMAL    0.796    2520       4582
+n_generators=1000, max_output=500, n_bre...   |         eq+env |    OPTIMAL    1.976   24760      37654
+
+n_generators=2000, max_output=500, n_bre...   |  bound+opt+env |    OPTIMAL    5.040    2737       6027
+n_generators=2000, max_output=500, n_bre...   |         eq+env |    OPTIMAL    6.353   49521     101206
+
+n_generators=5000, max_output=500, n_bre...   |  bound+opt+env |    OPTIMAL   19.042   12204      24866
+n_generators=5000, max_output=500, n_bre...   |         eq+env |    OPTIMAL   28.156  125886     269455
+
+
+==========================================================================================
+Stress test: Dispatch — scaling breakpoints
+==========================================================================================
+config                                        |       strategy |     status   time_s   bools   branches
+------------------------------------------------------------------------------------------
+n_generators=200, max_output=500, n_brea...   |  bound+opt+env |    OPTIMAL    0.439    8884        280
+n_generators=200, max_output=500, n_brea...   |         eq+env |    OPTIMAL    1.751   26393        664
+
+n_generators=200, max_output=500, n_brea...   |  bound+opt+env |    OPTIMAL    1.206   19173          0
+n_generators=200, max_output=500, n_brea...   |         eq+env |    OPTIMAL    3.748   33566          0
+
+n_generators=500, max_output=500, n_brea...   |  bound+opt+env |    OPTIMAL    1.439   21888          0
+n_generators=500, max_output=500, n_brea...   |         eq+env |    OPTIMAL    4.814   65887      68174
