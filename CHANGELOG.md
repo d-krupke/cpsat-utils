@@ -6,6 +6,54 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-03-15
+
+### Added
+
+- `cpsat_utils.piecewise` module with `PiecewiseLinearFunction` and
+  `PiecewiseConstantFunction` for modeling non-linear relationships as integer
+  constraints in CP-SAT.
+- Upper/lower bound constraints (`add_upper_bound`, `add_lower_bound`) and
+  floor/ceil/round equality constraints (`add_floor`, `add_ceil`, `add_round`)
+  for piecewise linear functions.
+- Ordered-step encoding for piecewise constant (step) function constraints.
+- Automatic convex partitioning to minimize boolean selector variables.
+- Optional convex envelope as redundant solver hints (requires scipy for
+  non-convex functions; fallback algorithm included).
+- `name` parameter on all constraint methods to avoid variable name collisions
+  when adding multiple piecewise constraints to the same model.
+- `PiecewiseLinearFunction.from_function()` constructor for sampling a callable
+  at evenly spaced breakpoints.
+- `PiecewiseConstantFunction.from_intervals()` constructor from `(start, value)`
+  pairs.
+- Benchmarks comparing encodings on scheduling and resource-allocation
+  instances.
+- Three progressive examples with plots: pricing tiers, budget allocation,
+  energy dispatch.
+
+### Changed
+
+- `segment_gradients()` now returns exact `fractions.Fraction` values instead of
+  floats to avoid precision loss with large coordinates.
+- Gradient comparisons in `is_convex()` and `_split_into_convex_parts()` use
+  integer cross-products instead of float division.
+
+### Fixed
+
+- Context manager `__exit__` methods (`AssertModelFeasible`,
+  `AssertModelInfeasible`, `AssertObjectiveValue`, `AssertOptimalWithinTime`)
+  destroyed the original traceback when re-raising exceptions from the `with`
+  body.
+- Equality constraints on simplified (single-part) functions used the
+  unsimplified segment list.
+- Round-mode equality constraints now add both upper and lower convex envelopes
+  for tighter propagation.
+- Internal invariant checks in `_integer_line_coefficients` and convex envelope
+  builders now raise `RuntimeError` instead of using `assert`, so they are not
+  silently disabled by `python -O`.
+- `solve()` docstring incorrectly claimed the `model` parameter accepts objects
+  with a `.model` attribute.
+
 ## [0.3.0] - 2026-03-15
 
 ### Added
