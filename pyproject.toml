@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=45", "setuptools_scm[toml]>=6.2", "wheel", "Cython"]
+requires = ["setuptools>=45", "setuptools_scm[toml]>=6.2", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
@@ -7,7 +7,7 @@ where = ["src"]
 
 [project]
 name = "cpsat-utils"
-version = "0.1.0"
+version = "0.2.0"
 description = "A Python package of utilities for Google's ortools CP-SAT solver."
 readme = "README.md"
 authors = [
@@ -20,3 +20,21 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = ["ortools>=9.10"]
+
+[project.urls]
+Homepage = "https://github.com/d-krupke/cpsat-utils"
+Repository = "https://github.com/d-krupke/cpsat-utils"
+Issues = "https://github.com/d-krupke/cpsat-utils/issues"
+
+[project.optional-dependencies]
+test = ["pytest"]
+dev = ["pytest", "pre-commit", "ruff"]
+
+[tool.ruff]
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

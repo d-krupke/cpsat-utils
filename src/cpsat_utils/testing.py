@@ -49,8 +49,8 @@ class AssertModelFeasible:
             # This will raise a RuntimeError if the model is infeasible.
 
     Args:
-        model (cp_model.CpModel | None): An existing CP-SAT model or None to create a new one.
-        solver (cp_model.CpSolver | None): An existing solver or None to create a new one.
+        model: An existing CP-SAT model or None to create a new one.
+        solver: An existing solver or None to create a new one.
 
     Raises:
         RuntimeError: If the model status is neither OPTIMAL nor FEASIBLE.
@@ -92,8 +92,8 @@ class AssertModelInfeasible:
             # This will raise a RuntimeError if the model is feasible.
 
     Args:
-        model (cp_model.CpModel | None): An existing CP-SAT model or None to create a new one.
-        solver (cp_model.CpSolver | None): An existing solver or None to create a new one.
+        model: An existing CP-SAT model or None to create a new one.
+        solver: An existing solver or None to create a new one.
 
     Raises:
         RuntimeError: If the model is found to be feasible.
@@ -157,7 +157,7 @@ class AssertObjectiveValue:
     def __exit__(self, exc_type, exc_val, exc_tb) -> None:
         if exc_type:
             raise exc_type(exc_val)
-        status = self.solver.Solve(self.model)
+        status = self.solver.solve(self.model)
         if status not in (cp_model.OPTIMAL, cp_model.FEASIBLE):
             raise RuntimeError(
                 f"Expected feasible for objective check, but status {status}."
@@ -165,7 +165,8 @@ class AssertObjectiveValue:
         value = self.solver.objective_value
         if abs(value - self.expected) > self.tol:
             raise RuntimeError(
-                f"Objective {value} differs from expected {self.expected} by more than {self.tol}."
+                f"Objective {value} differs from expected "
+                f"{self.expected} by more than {self.tol}."
             )
 
 
@@ -246,7 +247,7 @@ def _solve(model: cp_model.CpModel, solver=None, time_limit=None):
     solver = solver or cp_model.CpSolver()
     if time_limit is not None:
         solver.parameters.max_time_in_seconds = time_limit
-    status = solver.Solve(model)
+    status = solver.solve(model)
     return solver, status
 
 
