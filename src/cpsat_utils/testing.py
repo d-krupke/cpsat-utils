@@ -234,7 +234,7 @@ def solve(
       AssertionError if the solver’s status != expect.
     """
     solver = cp_model.CpSolver() if solver is None else solver
-    if isinstance(expect, int):
+    if not isinstance(expect, list):
         expect = [expect]
     if time_limit is not None:
         solver.parameters.max_time_in_seconds = time_limit
