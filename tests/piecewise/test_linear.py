@@ -2,6 +2,7 @@
 
 import fractions
 import math
+import warnings
 
 import pytest
 from ortools.sat.python import cp_model
@@ -48,6 +49,26 @@ class TestPiecewiseLinearFunction:
     def test_validation_too_few_points(self):
         with pytest.raises(ValueError, match="at least 2"):
             PiecewiseLinearFunction([0], [0])
+
+    def test_validation_float_xs(self):
+        """Float x values must be rejected even if they look integral."""
+        with pytest.raises(TypeError, match="xs.*non-integer"):
+            PiecewiseLinearFunction([0.0, 10.0, 20.0], [0, 10, 5])
+
+    def test_validation_float_ys(self):
+        """Float y values must be rejected."""
+        with pytest.raises(TypeError, match="ys.*non-integer"):
+            PiecewiseLinearFunction([0, 10, 20], [0, 10.5, 5])
+
+    def test_validation_float_xs_error_detail(self):
+        """Error message includes the offending index and value."""
+        with pytest.raises(TypeError, match=r"xs\[1\]=10\.5"):
+            PiecewiseLinearFunction([0, 10.5, 20], [0, 10, 5])
+
+    def test_validation_mixed_types_ys(self):
+        """Mix of int and float in ys is rejected."""
+        with pytest.raises(TypeError, match="ys.*non-integer"):
+            PiecewiseLinearFunction([0, 10], [0, 10.0])
 
     def test_convex_upper(self):
         """Concave-shaped function (gradients decrease) is convex for upper bound."""
@@ -130,6 +151,31 @@ class TestConstructors:
                 lambda x: x, x_min=0, x_max=10, num_breakpoints=1
             )
 
+    def test_from_function_rejects_x_min_ge_x_max(self):
+        """x_min >= x_max is rejected with a clear message."""
+        with pytest.raises(ValueError, match="x_min.*less than.*x_max"):
+            PiecewiseLinearFunction.from_function(
+                lambda x: x, x_min=10, x_max=0, num_breakpoints=5
+            )
+
+    def test_from_function_rejects_x_min_eq_x_max(self):
+        with pytest.raises(ValueError, match="x_min.*less than.*x_max"):
+            PiecewiseLinearFunction.from_function(
+                lambda x: x, x_min=5, x_max=5, num_breakpoints=5
+            )
+
+    def test_from_function_deduplicates_collapsed_breakpoints(self):
+        """Many breakpoints in a tiny range: duplicates are removed with a warning."""
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            f = PiecewiseLinearFunction.from_function(
+                lambda x: x * x, x_min=0, x_max=3, num_breakpoints=20
+            )
+            assert any("collapsed" in str(warning.message) for warning in w)
+        # Should still produce a valid function with unique xs
+        assert len(f.xs) == len(set(f.xs))
+        assert len(f.xs) >= 2
+
 
 # ---------------------------------------------------------------------------
 # Helper functions
@@ -160,6 +206,27 @@ class TestValidation:
         f = PiecewiseLinearFunction([0, 10], [0, 10])
         with pytest.raises(ValueError, match="bound_type"):
             f.is_convex("invalid")
+
+
+class TestLargeCoefficientWarning:
+    def test_warns_on_large_coprime_slope(self):
+        """Segments with large coprime dy/dx trigger a warning."""
+        # dy=999999937 (prime), dx=999999929 (prime) → lcm ≈ 10^18
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            PiecewiseLinearFunction([0, 999_999_929], [0, 999_999_937])
+            large = [w_ for w_ in w if "large internal coefficients" in str(w_.message)]
+            assert large
+
+    def test_no_warning_for_small_coefficients(self):
+        """Normal segments should not warn."""
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            PiecewiseLinearFunction([0, 10, 20], [0, 10, 5])
+            coeff_warnings = [
+                x for x in w if "large internal coefficients" in str(x.message)
+            ]
+            assert len(coeff_warnings) == 0
 
 
 class TestHelpers:
@@ -574,6 +641,7 @@ class TestSegmentGradients:
         assert grads[0] == fractions.Fraction(10, 3)
         assert grads[1] == fractions.Fraction(-6, 3)
 
+    @pytest.mark.filterwarnings("ignore:Segment.*large internal coefficients")
     def test_large_coordinates_exact(self):
         """Float division loses precision for large values; Fraction does not."""
         # 10**17 + 1 and 10**17 differ by 1, but float can't distinguish

@@ -36,6 +36,7 @@ from __future__ import annotations
 import bisect
 import fractions
 import typing
+import warnings
 
 from ortools.sat.python import cp_model
 
@@ -75,11 +76,56 @@ class PiecewiseLinearFunction:
         if len(xs) < 2:
             msg = "Need at least 2 breakpoints"
             raise ValueError(msg)
+        if not all(isinstance(v, int) for v in xs):
+            bad = [(i, v) for i, v in enumerate(xs) if not isinstance(v, int)]
+            detail = ", ".join(
+                f"xs[{i}]={v!r} (type {type(v).__name__})" for i, v in bad[:5]
+            )
+            msg = f"All xs must be integers, but got non-integer values: {detail}"
+            raise TypeError(msg)
+        if not all(isinstance(v, int) for v in ys):
+            bad = [(i, v) for i, v in enumerate(ys) if not isinstance(v, int)]
+            detail = ", ".join(
+                f"ys[{i}]={v!r} (type {type(v).__name__})" for i, v in bad[:5]
+            )
+            msg = f"All ys must be integers, but got non-integer values: {detail}"
+            raise TypeError(msg)
         if any(x1 >= x2 for x1, x2 in zip(xs, xs[1:], strict=False)):
             msg = "xs must be strictly increasing"
             raise ValueError(msg)
         self.xs: list[int] = list(xs)
         self.ys: list[int] = list(ys)
+        self._warn_large_coefficients()
+
+    def _warn_large_coefficients(self) -> None:
+        """Warn if any segment has a slope that produces very large coefficients.
+
+        CP-SAT uses 64-bit integers internally. Segments with large dy/dx
+        ratios involving coprime numbers produce large scaled coefficients
+        (t, a, b) that can approach those limits and cause silent overflow
+        or poor solver performance.
+        """
+        _COEFF_WARN_THRESHOLD = 10**9
+        for i in range(self.num_segments):
+            dy = abs(self.ys[i + 1] - self.ys[i])
+            dx = self.xs[i + 1] - self.xs[i]
+            # The scaled coefficient t = lcm(dy, dx) / dy when dy != 0.
+            # The largest coefficient is roughly max(t, a) ~ lcm(dy,dx)/min(dy,dx).
+            # A quick upper bound: t * max(|a|, 1) * max(|x|, 1).
+            if dy == 0:
+                continue
+            import math
+
+            lcm = math.lcm(dy, dx)
+            if lcm > _COEFF_WARN_THRESHOLD:
+                warnings.warn(
+                    f"Segment {i} from ({self.xs[i]}, {self.ys[i]}) to "
+                    f"({self.xs[i + 1]}, {self.ys[i + 1]}) has slope {dy}/{dx} "
+                    f"producing large internal coefficients (lcm={lcm}). "
+                    f"This may cause poor solver performance. Consider using "
+                    f"breakpoints with smaller coprime dy/dx ratios.",
+                    stacklevel=3,
+                )
 
     @classmethod
     def from_points(
@@ -130,11 +176,34 @@ class PiecewiseLinearFunction:
             if num_breakpoints < 2:
                 msg = "num_breakpoints must be at least 2"
                 raise ValueError(msg)
+            if x_min >= x_max:
+                msg = (
+                    f"x_min must be strictly less than x_max, "
+                    f"got x_min={x_min}, x_max={x_max}"
+                )
+                raise ValueError(msg)
             step = (x_max - x_min) / (num_breakpoints - 1)
             xs = [x_min + round(i * step) for i in range(num_breakpoints)]
             # Ensure exact endpoints
             xs[0] = x_min
             xs[-1] = x_max
+            # Deduplicate xs that collapsed to the same integer after rounding
+            n_before = len(xs)
+            xs = sorted(set(xs))
+            if len(xs) < 2:
+                msg = (
+                    f"After rounding, only {len(xs)} unique x value(s) remain "
+                    f"in range [{x_min}, {x_max}] with {num_breakpoints} breakpoints. "
+                    f"Use a wider range or fewer breakpoints."
+                )
+                raise ValueError(msg)
+            if len(xs) < n_before:
+                warnings.warn(
+                    f"{n_before - len(xs)} of {n_before} breakpoints collapsed to "
+                    f"duplicate x values after rounding and were removed. "
+                    f"{len(xs)} unique breakpoints remain in [{x_min}, {x_max}].",
+                    stacklevel=2,
+                )
         return cls(xs, [round(f(x)) for x in xs])
 
     def __call__(self, x: int | float) -> float:
