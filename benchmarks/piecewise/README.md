@@ -267,6 +267,56 @@ constraint keeps the LP relaxation tight.
   structure is simple. The convex envelope makes the LP relaxation so tight
   that the solver often needs zero branches.
 
+## Comparison with Pyomo + HiGHS (2026-03-15)
+
+A separate benchmark (`compare_pyomo.py`) compares our best CP-SAT encoding
+(`bound+opt+env`) against Pyomo's built-in `Piecewise` component solved with
+HiGHS (a state-of-the-art open-source MIP solver). Both use one-sided bounds
+(`UB` for maximization, `LB` for minimization) with the DCC formulation.
+
+### Key difference: integer vs continuous
+
+CP-SAT operates on integers only, so piecewise linear functions must be
+rounded (floor/ceil). Pyomo + HiGHS supports continuous variables, so the
+y-value can represent `f(x)` exactly as a real number. This means:
+
+- **Pyomo models are more accurate** — no rounding error accumulates across
+  curves. With 80 curves, CP-SAT's integer rounding can cause objective
+  differences of ~30 units.
+- **CP-SAT is limited to integer breakpoints and values.** If your application
+  requires sub-integer precision, a MIP solver with continuous variables is the
+  better tool.
+
+### Performance comparison (3 seeds, 60s time limit)
+
+| Problem | Config | CP-SAT | Pyomo+HiGHS | Notes |
+|---|---|---|---|---|
+| Knapsack | 100 items, 15bp, convex | 0.05-0.14s | 0.15-0.25s | CP-SAT ~2x faster |
+| Knapsack | 200 items, 10bp, non-convex | 0.17-0.47s | 0.30-0.54s | Comparable |
+| Knapsack | 500 items, 10bp, non-convex | 0.65-1.87s | 0.52-1.03s | HiGHS slightly faster |
+| Production | 30 prod, 15bp, non-convex | 0.34-1.41s | 0.89-6.49s | CP-SAT 2-4x faster |
+| Production | 50 prod, 15bp, non-convex | 2.35-4.94s | 3.45-15.9s | CP-SAT 1.5-3x faster |
+| Production | 80 prod, 10bp, non-convex | 1.91-12.5s | 2.05-16.6s | Comparable |
+| Dispatch | 50 gen, 15bp | **0.03s** | 0.55-2.47s | **CP-SAT 20-100x** |
+| Dispatch | 100 gen, 10bp | **0.03-0.04s** | 1.36-3.16s | **CP-SAT 40-90x** |
+| Dispatch | 100 gen, 20bp | **0.07-0.08s** | 25-30s | **CP-SAT 300-400x** |
+| Dispatch | 200 gen, 15bp | **0.11-0.13s** | **60s timeout** | **CP-SAT >500x** |
+
+### When to use which
+
+- **CP-SAT** excels at problems with combinatorial structure (on/off decisions,
+  scheduling, dispatch). Its constraint propagation engine handles these far
+  better than branch-and-cut MIP solvers. Use CP-SAT when all quantities are
+  naturally integers and the problem has discrete decisions.
+- **Pyomo + MIP solver** is preferable when you need continuous-valued
+  piecewise functions (no integer rounding), when the problem is fundamentally
+  a continuous optimization (production planning with few discrete decisions),
+  or when you need access to MIP-specific features (cuts, warm starts, LP
+  relaxation bounds).
+- For **mixed problems** with both combinatorial and continuous aspects,
+  consider which aspect dominates. The dispatch results show that even modest
+  combinatorial structure can shift the balance dramatically toward CP-SAT.
+
 ## File Structure
 
 ```

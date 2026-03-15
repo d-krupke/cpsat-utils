@@ -39,7 +39,7 @@ def random_concave_curve(
         ys.append(ys[-1] + int(g * (xs[i + 1] - xs[i])))
     scale = y_scale / max(1, max(ys))
     ys = [int(y * scale) for y in ys]
-    return PiecewiseLinearFunction(xs, ys)
+    return PiecewiseLinearFunction(xs, ys).simplify()
 
 
 def random_nonconvex_curve(
@@ -54,7 +54,7 @@ def random_nonconvex_curve(
         ys.append(max(0, ys[-1] + delta))
     scale = y_scale / max(1, max(ys))
     ys = [int(y * scale) for y in ys]
-    return PiecewiseLinearFunction(xs, ys)
+    return PiecewiseLinearFunction(xs, ys).simplify()
 
 
 def random_convex_increasing_curve(
@@ -73,7 +73,7 @@ def random_convex_increasing_curve(
         ys.append(ys[-1] + int(g * (xs[i + 1] - xs[i])))
     scale = y_scale / max(1, max(ys))
     ys = [int(y * scale) for y in ys]
-    return PiecewiseLinearFunction(xs, ys)
+    return PiecewiseLinearFunction(xs, ys).simplify()
 
 
 # ---------------------------------------------------------------------------

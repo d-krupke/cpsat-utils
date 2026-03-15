@@ -282,6 +282,16 @@ class PiecewiseLinearFunction:
                     return False
         return True
 
+    def simplify(self) -> PiecewiseLinearFunction:
+        """Return a copy with redundant collinear interior points removed.
+
+        Useful after rounding or scaling produces breakpoints that lie on
+        the same line as their neighbours.
+        """
+        from cpsat_utils.piecewise._helpers import _simplify
+
+        return _simplify(self)
+
     def copy(self) -> PiecewiseLinearFunction:
         return PiecewiseLinearFunction(list(self.xs), list(self.ys))
 
