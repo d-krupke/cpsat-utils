@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-03-15
+
+### Added
+
+- `cpsat_utils.hints` module with `assert_hint_feasible()` and `complete_hint()`
+  for validating and completing partial solution hints.
+- `cpsat_utils.io` module with `export_model()` and `import_model()` for
+  saving/loading models in binary or text protobuf format.
+- CI now tests against both ortools 9.10 and the latest version.
+
+### Changed
+
+- README expanded with documentation for hints and io modules.
+
 ## [0.2.1] - 2026-03-15
 
 ### Fixed

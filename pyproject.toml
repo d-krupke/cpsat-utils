@@ -7,7 +7,7 @@ where = ["src"]
 
 [project]
 name = "cpsat-utils"
-version = "0.2.1"
+version = "0.3.0"
 description = "A Python package of utilities for Google's ortools CP-SAT solver."
 readme = "README.md"
 authors = [
