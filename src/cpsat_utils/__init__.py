@@ -6,7 +6,7 @@ hint management utilities, and model import/export.
 """
 
 # When bumping __version__, also update CHANGELOG.md with the new release entry.
-__version__ = "0.4.0"
+__version__ = "0.4.1"
 
 from cpsat_utils.hints import assert_hint_feasible, complete_hint
 from cpsat_utils.io import export_model, import_model
