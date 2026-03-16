@@ -133,8 +133,30 @@ of a larger model that benefits from CP-SAT's strengths in combinatorial
 optimization. For pure non-linear optimization, dedicated solvers are
 typically a better choice.
 
-Since CP-SAT operates on integers only, true piecewise linear values generally
-fall between integers and cannot be enforced as exact equalities.
+### Why not just `y = f(x)`?
+
+CP-SAT works with integers only, which creates two problems for piecewise
+linear functions (see the
+[CP-SAT Primer](https://d-krupke.github.io/cpsat-primer/04B_advanced_modelling.html#non-linear-constraintspiecewise-linear-functions)
+for an in-depth explanation):
+
+1. **Non-integral values:** For most integer `x`, `f(x)` falls between
+   integers (e.g., `f(5) = 3.5`), making `y = f(x)` infeasible. That is why
+   the API offers one-sided bounds (`add_upper_bound`, `add_lower_bound`) and
+   rounding modes (`add_floor`, `add_ceil`, `add_round`) instead of plain
+   equality.
+2. **Non-integral coefficients:** The slope `a` and intercept `b` in
+   `y = ax + b` are often fractional. Internally, each segment is scaled to
+   integer form `t*y = a*x + b` using the least common multiple. When `dy`
+   and `dx` of a segment are large coprimes, the resulting coefficients can
+   become very large — the constructor warns when `lcm(|dy|, dx) > 10^9`.
+
+### Input validation
+
+All breakpoints must be integers (both `xs` and `ys`). Passing floats raises
+a `TypeError`. When using `from_function`, y-values are automatically
+rounded and duplicate x-values (from rounding in small ranges) are
+deduplicated with a warning.
 
 ```python
 from ortools.sat.python import cp_model
