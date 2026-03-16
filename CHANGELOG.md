@@ -6,6 +6,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.1] - 2026-03-16
+
+### Added
+
+- `PiecewiseLinearFunction.simplify()` public method to remove redundant
+  collinear interior breakpoints.
+- Pyomo+HiGHS benchmark comparison (`benchmarks/piecewise/compare_pyomo.py`)
+  documenting CP-SAT vs MIP solver tradeoffs for piecewise linear problems.
+
+### Fixed
+
+- `__version__` did not match `pyproject.toml` (was still `"0.4.0"`).
+- `PiecewiseLinearFunction.__init__` now validates that breakpoint coordinates
+  are integers, rejecting floats early with a clear error message.
+- `PiecewiseLinearFunction.from_function()` rejects `x_min >= x_max` and
+  deduplicates collapsed breakpoints from integer rounding.
+- Instance generators in benchmarks now call `.simplify()` to remove collinear
+  breakpoints caused by integer rounding during scaling.
+
 ## [0.4.0] - 2026-03-15
 
 ### Added
