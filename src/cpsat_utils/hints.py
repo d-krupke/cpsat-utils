@@ -6,13 +6,19 @@ partial hints into full variable assignments. These are common operations
 when warm-starting CP-SAT models from heuristic solutions or prior solves.
 
 Usage:
-    from cpsat_utils.hints import assert_hint_feasible, complete_hint
+    from cpsat_utils.hints import (
+        assert_hint_feasible,
+        complete_hint,
+        hint_from_solution,
+    )
 
     model = cp_model.CpModel()
     x = model.new_bool_var("x")
     model.add_hint(x, 1)
     assert_hint_feasible(model)  # raises if hints are infeasible
     complete_hint(model)         # fills in unhinted variables
+    # After a solve, seed hints for the next iteration:
+    hint_from_solution(model, solver)
 
 When to modify:
     - If CP-SAT changes the hint validation API
@@ -20,6 +26,7 @@ When to modify:
 """
 
 import logging
+from collections.abc import Iterable
 
 from ortools.sat.python import cp_model
 
@@ -97,4 +104,77 @@ def complete_hint(
         var = model.get_int_var_from_proto_index(i)
         model.add_hint(var, solver.value(var))
     logger.info("Hints successfully completed.")
+    return True
+
+
+def hint_from_solution(
+    model: cp_model.CpModel,
+    solver: cp_model.CpSolver,
+    variables: Iterable[cp_model.IntVar] | None = None,
+    *,
+    strict: bool = True,
+) -> bool:
+    """
+    Replace the model's hints with values read from ``solver``.
+
+    Intended for warm-starting a follow-up solve on the same model
+    (LNS, lexicographic phases, incremental re-solves). When the solver
+    has a usable solution, existing hints on ``model`` are cleared and
+    replaced with the solver's values, so stale hints from previous
+    iterations cannot leak through.
+
+    Args:
+        model: The CpModel to install hints on. Existing hints are cleared
+            only if a solution is available.
+        solver: A CpSolver that has just returned OPTIMAL or FEASIBLE on
+            ``model``.
+        variables: Variables to hint. Defaults to all variables in the
+            model (mirrors :func:`complete_hint`'s behavior of walking
+            every proto variable). Hinting only the decision variables is
+            often sufficient in practice; CP-SAT can reconstruct the
+            auxiliary ones.
+        strict: If True (default), raise ``ValueError`` when the solver
+            has no usable solution (status is not OPTIMAL or FEASIBLE,
+            or ``solve()`` was never called). If False, leave existing
+            hints untouched and return False — convenient inside
+            iterative loops where an occasional time-out should not
+            abort the run.
+
+    Returns:
+        True if hints were installed from the solver's solution, False if
+        no solution was available and ``strict=False``.
+
+    Raises:
+        ValueError: If ``strict`` is True and the solver has no usable
+            solution. Without a feasible solution, ``solver.value()``
+            would silently write garbage hints.
+    """
+    try:
+        status = solver.response_proto.status
+        has_solution = status in (cp_model.OPTIMAL, cp_model.FEASIBLE)
+        status_label = status.name
+    except RuntimeError:
+        has_solution = False
+        status_label = "solve() has not been called"
+
+    if not has_solution:
+        if strict:
+            raise ValueError(
+                "hint_from_solution requires a solver with status OPTIMAL "
+                f"or FEASIBLE; got {status_label}."
+            )
+        logger.warning(
+            "hint_from_solution: no usable solution (%s); hints unchanged.",
+            status_label,
+        )
+        return False
+
+    model.clear_hints()
+    if variables is None:
+        for i in range(len(model.proto.variables)):
+            var = model.get_int_var_from_proto_index(i)
+            model.add_hint(var, solver.value(var))
+    else:
+        for var in variables:
+            model.add_hint(var, solver.value(var))
     return True
