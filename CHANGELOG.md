@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2026-04-25
+
+### Added
+
+- `hint_from_solution(model, solver, variables=None, *, strict=True)` helper for
+  warm-starting iterative solves (LNS/ALNS, lexicographic phases, incremental
+  re-solves). Clears existing hints and installs new ones from a completed
+  `CpSolver` run. Returns True on success; raises `ValueError` when the solver
+  has no usable solution, or returns False and leaves hints untouched when
+  called with `strict=False`.
+
 ## [0.4.1] - 2026-03-16
 
 ### Added

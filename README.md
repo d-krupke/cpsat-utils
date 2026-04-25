@@ -125,6 +125,36 @@ complete_hint(model)   # fills in y, z, ... via a short solve
 Returns `True` on success, `False` if the hints are infeasible or the solve
 times out (hints are left unchanged on failure).
 
+### Warm-Starting From a Previous Solve
+
+For iterative workflows (LNS/ALNS, lexicographic phases, incremental re-solves,
+repair loops), you usually want the next solve to start from the assignment the
+previous solve produced. `hint_from_solution` clears any existing hints and
+seeds new ones from the solver:
+
+```python
+from cpsat_utils.hints import hint_from_solution
+
+solver.solve(model)               # OPTIMAL or FEASIBLE
+hint_from_solution(model, solver) # replace hints with the solution
+# ...modify objective or constraints...
+solver.solve(model)               # warm-started from previous solution
+```
+
+By default every variable in the model is hinted; pass `variables=[...]` to
+restrict to a specific subset (e.g. only decision variables — CP-SAT can
+reconstruct the auxiliary ones). By default raises `ValueError` if the
+solver's last status was not `OPTIMAL` or `FEASIBLE`, so a stale or failed
+solve can never silently install garbage hints. Pass `strict=False` to instead
+return `False` and leave existing hints untouched — handy inside iterative
+loops where an occasional time-out should not abort the run:
+
+```python
+if not hint_from_solution(model, solver, strict=False):
+    # No solution this round; keep whatever hints we already had.
+    ...
+```
+
 ## Piecewise Linear Functions
 
 Model non-linear relationships (costs, revenue, value curves) as integer
