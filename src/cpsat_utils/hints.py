@@ -17,8 +17,12 @@ Usage:
     model.add_hint(x, 1)
     assert_hint_feasible(model)  # raises if hints are infeasible
     complete_hint(model)         # fills in unhinted variables
+
     # After a solve, seed hints for the next iteration:
-    hint_from_solution(model, solver)
+    solver = cp_model.CpSolver()
+    status = solver.solve(model)
+    if status in (cp_model.OPTIMAL, cp_model.FEASIBLE):
+        hint_from_solution(model, solver)
 
 When to modify:
     - If CP-SAT changes the hint validation API
@@ -31,29 +35,6 @@ from collections.abc import Iterable
 from ortools.sat.python import cp_model
 
 logger = logging.getLogger(__name__)
-
-
-_STATUS_NAMES_BY_CODE = {
-    int(cp_model.UNKNOWN): "UNKNOWN",
-    int(cp_model.MODEL_INVALID): "MODEL_INVALID",
-    int(cp_model.FEASIBLE): "FEASIBLE",
-    int(cp_model.INFEASIBLE): "INFEASIBLE",
-    int(cp_model.OPTIMAL): "OPTIMAL",
-}
-
-
-def _backwards_compatible_status_name(status: object) -> str:
-    """Return the name of a CpSolverStatus across ortools versions.
-
-    ortools >= 9.11 exposes ``response_proto.status`` as a ``CpSolverStatus``
-    enum (with a ``.name`` attribute). ortools 9.10 still returns a plain
-    ``int``, so we map it back to the canonical name via a lookup table.
-    """
-    name = getattr(status, "name", None)
-    if name is not None:
-        return name
-    code = int(status)  # type: ignore[arg-type]
-    return _STATUS_NAMES_BY_CODE.get(code, f"status code {code}")
 
 
 def assert_hint_feasible(
@@ -175,7 +156,7 @@ def hint_from_solution(
     try:
         status = solver.response_proto.status
         has_solution = status in (cp_model.OPTIMAL, cp_model.FEASIBLE)
-        status_label = _backwards_compatible_status_name(status)
+        status_label = solver.status_name(status)
     except RuntimeError:
         has_solution = False
         status_label = "solve() has not been called"
